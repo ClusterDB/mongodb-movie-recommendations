@@ -1,0 +1,23 @@
+{
+  "fields": [
+    {
+      "type": "vector",
+      "path": "fullplot_embedding",
+      "numDimensions": 1024,
+      "similarity": "cosine",
+      "quantization": "scalar"
+    },
+    {
+      "type": "filter",
+      "path": "_id"
+    },
+    {
+      "type": "filter",
+      "path": "genres"
+    },
+    {
+      "type": "filter",
+      "path": "type"
+    }
+  ]
+}

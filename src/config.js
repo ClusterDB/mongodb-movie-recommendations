@@ -3,7 +3,7 @@ let config = {
   keyfileLocation: '/home/ec2-user/certs/privkey.pem',
   certfileLocation: '/home/ec2-user/certs/fullchain.pem',
   productionClientURL: 'https://mongodb-developer.github.io',
-  database: 'sample_mflix',
+  database: 'movie_recommendations',
   moviesCollection: 'movies',
   customerCollection: 'customers',
   productionIP: '0.0.0.0',
