@@ -1,0 +1,20 @@
+{
+  "name": "mongodb-movie-recommendations",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "build": "echo \"Building the app...\""
+  },
+  "author": "Andrew Morgan",
+  "description": "Backend API for the MongoDB movie recommendation app",
+  "dependencies": {
+    "axios": "^1.13.1",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "https": "^1.0.0",
+    "mongodb": "^6.12.0"
+  }
+}

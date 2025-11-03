@@ -1,0 +1,15 @@
+let config = {
+  localDev: true,
+  keyfileLocation: '/home/ec2-user/certs/privkey.pem',
+  certfileLocation: '/home/ec2-user/certs/fullchain.pem',
+  productionClientURL: 'https://mongodb-developer.github.io',
+  database: 'sample_mflix',
+  moviesCollection: 'movies',
+  customerCollection: 'customers',
+  productionIP: '0.0.0.0',
+  devIP: '127.0.0.1',
+  productionPort: 443,
+  devPort: 3000,
+}
+
+module.exports = config;
