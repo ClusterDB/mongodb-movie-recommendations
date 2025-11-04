@@ -6,6 +6,7 @@ let config = {
   database: 'movie_recommendations',
   moviesCollection: 'movies',
   customerCollection: 'customers',
+  viewingsCollection: 'viewings',
   productionIP: '0.0.0.0',
   devIP: '127.0.0.1',
   productionPort: 443,
