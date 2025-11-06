@@ -1,15 +1,10 @@
-const { ObjectId } = require('mongodb');
+const { getVoyageClient } = require('../helpers/voyageai');
 const { getDB } = require('../helpers/db');
 const config = require('../config');
 
 async function getRecommendation(req, res) {
-  // If customerId is provided, then the recommendation is based on their
-  // viewing history. If not, and if plotDescription is provided then that will
-  // be used to generate a recommendation.
-
   const secret = req.query.secret;
   const customerId = req.query.customerId;
-  const plotDescription = req.query.plotDescription;
   if (!secret || config.secret !== secret) {
     console.error(`Forbidden: incorrect or missing secret: received '${secret}'`);
     return res.status(403).json({ message: 'Forbidden. Must include correct secret.' });
@@ -20,7 +15,7 @@ async function getRecommendation(req, res) {
         const customerCollection = db.collection(config.customerCollection);
 
         // Single aggregation on customers to return both viewed movieIds and favourite movie info
-        let pipeline = [
+        const favouritesPipeline = [
           { $match: { _id: customerId } },
           { $project: { viewedMovies: 1 } },
           {
@@ -73,7 +68,7 @@ async function getRecommendation(req, res) {
           }
         ];
 
-        const [aggResult] = await customerCollection.aggregate(pipeline).toArray();
+        const [aggResult] = await customerCollection.aggregate(favouritesPipeline).toArray();
 
         if (!aggResult) {
           console.error(`Customer with ID ${customerId} not found or has no view history.`);
@@ -106,22 +101,57 @@ async function getRecommendation(req, res) {
               title: 1,
               fullplot: 1,
             }
+          },
+          {
+            $match: { score: { $gt: 0.8 }}
           }
         ]
 
         const searchResults = await moviesCollection.aggregate(vectorSearchPipeline).toArray();
+        if (searchResults.length === 0) {
+          console.log('No suitable recommendation found based on favourite movie.');
+          return res.status(404).json({ message: 'No recommendation found' });
+        }
+
         console.log('Search results:', searchResults);
 
-        res.status(200).json({ searchResults });
+        const voyageClient = getVoyageClient();
 
-        // TODO: Use reranker
+        const rerankResponse = await voyageClient.rerank({
+          model: 'rerank-2',
+          query: favouriteMovie.fullplot,
+          documents: searchResults.map(doc => doc.fullplot)
+        });
+
+        // rerankResponse ===
+        // {
+        //   object: 'list',
+        //   data: [
+        //     { relevanceScore: 0.5546875, index: 1 },
+        //     { relevanceScore: 0.5078125, index: 3 },
+        //     { relevanceScore: 0.453125, index: 0 },
+        //     { relevanceScore: 0.453125, index: 2 },
+        //     { relevanceScore: 0.3828125, index: 4 }
+        //   ],
+        //   model: 'rerank-2',
+        //   usage: { totalTokens: 942 }
+        // }
+
+        console.log('Rerank results:', rerankResponse);
+        const topRecommendation = searchResults[rerankResponse.data[0].index];
+        console.log('Top recommendation after reranking:', topRecommendation);
+
+        res.status(200).json({ 
+          favourite: { ...favouriteMovie, fullplot_embedding: undefined },
+          recommendation: topRecommendation 
+        });
 
       } catch (error) {
         console.error('Error fetching recommendation:', error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
       }
     } else {
-      res.status(200).json(plotDescription ? `${plotDescription}` : `${{Error: 'No customerId or plotDescription provided'}}`);
+      res.status(400).json({ Error: 'No customerId provided' });
     }
   }
 };

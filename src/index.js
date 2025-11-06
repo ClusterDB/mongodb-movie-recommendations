@@ -6,6 +6,7 @@ const fs = require('fs');
 
 const config = require('./config');
 const { getDB } = require('./helpers/db');
+const { getVoyageClient } = require('./helpers/voyageai');
 const getMovie = require('./endpoints/getMovie');
 const postViewing = require('./endpoints/postViewing');
 const getRecommendation = require('./endpoints/getRecommendation');
@@ -46,6 +47,7 @@ console.log(`Using MongoDB URI: ${config.mongoDBURI} to connect to database: ${c
 async function start() {
   try {
     await getDB();
+    await getVoyageClient();
 
     // Middleware
     app.use((req, res, next) => {
