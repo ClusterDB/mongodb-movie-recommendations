@@ -1,6 +1,6 @@
-const { getVoyageClient } = require('../helpers/voyageai');
-const { getDB } = require('../helpers/db');
-const config = require('../config');
+import getVoyageClient from '../helpers/voyageai.js';
+import { getDB } from '../helpers/db.js';
+import config from '../config.js';
 
 async function getRecommendation(req, res) {
   const secret = req.query.secret;
@@ -156,4 +156,4 @@ async function getRecommendation(req, res) {
   }
 };
 
-module.exports = getRecommendation;
+export default getRecommendation;

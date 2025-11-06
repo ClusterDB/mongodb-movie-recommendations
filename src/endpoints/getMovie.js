@@ -1,6 +1,6 @@
-const { ObjectId } = require('mongodb');
-const { getDB } = require('../helpers/db');
-const config = require('../config');
+import { ObjectId } from 'mongodb';
+import { getDB } from '../helpers/db.js';
+import config from '../config.js';
 
 async function getMovie(req, res) {
   const movieId = req.query.id;
@@ -28,4 +28,4 @@ async function getMovie(req, res) {
   }
 };
 
-module.exports = getMovie;
+export default getMovie;

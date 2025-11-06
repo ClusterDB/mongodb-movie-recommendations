@@ -1,6 +1,6 @@
-const config = require('../config');
-const { getDB } = require('../helpers/db');
-const { ObjectId } = require('mongodb');
+import config from '../config.js';
+import { getDB } from '../helpers/db.js';
+import { ObjectId } from 'mongodb';
 
 async function postViewing(req, res) {
   const body = req.body;
@@ -55,4 +55,4 @@ async function postViewing(req, res) {
   res.status(200).json(body);
 };
 
-module.exports = postViewing;
+export default postViewing;

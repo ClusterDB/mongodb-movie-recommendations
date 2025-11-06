@@ -14,4 +14,4 @@ let config = {
   devPort: 3000
 }
 
-module.exports = config;
+export default config;

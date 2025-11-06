@@ -1,17 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const https = require('https');
-const fs = require('fs');
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import https from 'https';
+import fs from 'fs';
 
-const config = require('./config');
-const { getDB } = require('./helpers/db');
-const { getVoyageClient } = require('./helpers/voyageai');
-const getMovie = require('./endpoints/getMovie');
-const postViewing = require('./endpoints/postViewing');
-const getRecommendation = require('./endpoints/getRecommendation');
-const { exit } = require('process');
-const { get } = require('http');
+import config from './config.js';
+import { getDB } from './helpers/db.js';
+import getVoyageClient from './helpers/voyageai.js';
+import getMovie from './endpoints/getMovie.js';
+import postViewing from './endpoints/postViewing.js';
+import getRecommendation from './endpoints/getRecommendation.js';
 
 const app = express();
 const ip = config.localDev ? config.devIP : config.productionIP;
@@ -24,15 +22,15 @@ if (mongoDBURI) {
   config.mongoDBURI = mongoDBURI;
 } else {
   console.error('MONGODB_URI not set in environment variables');
-  exit(1)
-};
+  process.exit(1);
+}
 
 if (secret) {
   config.secret = secret;
 } else {
   console.error('SECRET not set in environment variables');
-  exit(1)
-};
+  process.exit(1);
+}
 
 if (voyageAPIKey) {
   config.voyageAPIKey = voyageAPIKey;
