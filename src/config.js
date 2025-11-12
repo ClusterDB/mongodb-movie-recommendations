@@ -8,6 +8,7 @@ let config = {
   customerCollection: 'customers',
   viewingsCollection: 'viewings',
   moviesVectorIndex: 'movie-recommendation',
+  recommendationTimeoutDays: 1,
   productionIP: '0.0.0.0',
   devIP: '127.0.0.1',
   productionPort: 443,

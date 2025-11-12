@@ -54,7 +54,8 @@ async function getRecommendation(req, res) {
                 { $replaceRoot: { newRoot: '$movie' } },
                 { $project: { 
                   _id: 1,
-                  title: 1, 
+                  title: 1,
+                  mostSimilar: 1,
                   fullplot: 1,
                   fullplot_embedding: 1 } }
               ]
@@ -80,6 +81,25 @@ async function getRecommendation(req, res) {
         console.log('Favourite movie aggregation result:', favouriteMovie);
 
         const moviesCollection = db.collection(config.moviesCollection);
+
+        // If we've already cached the most similar movie in the last X days,
+        // then use that
+
+        if (favouriteMovie && favouriteMovie.mostSimilar && 
+          favouriteMovie.mostSimilar.id && favouriteMovie.mostSimilar.lastUpdated &&
+          favouriteMovie.mostSimilar.lastUpdated > Date.now() - config.recommendationTimeoutDays * 24 * 60 * 60 * 1000
+        ) {
+          console.log('Using cached most similar movie for recommendation.');
+          const recommendedMovie = await moviesCollection.findOne({ _id: favouriteMovie.mostSimilar.id });
+          if (recommendedMovie) {
+            return res.status(200).json({ 
+              favourite: { ...favouriteMovie, fullplot_embedding: undefined },
+              recommendation: recommendedMovie 
+            });
+          } else {
+            console.log('Cached most similar movie not found in database, proceeding to vector search.');
+          }
+        }
         
         const vectorSearchPipeline = [
           {
@@ -141,11 +161,22 @@ async function getRecommendation(req, res) {
         const topRecommendation = searchResults[rerankResponse.data[0].index];
         console.log('Top recommendation after reranking:', topRecommendation);
 
+        // Update the favourite movie's mostSimilar field with the new recommendation
+        await moviesCollection.updateOne(
+          { _id: favouriteMovie._id },
+          { $set: { 
+            mostSimilar: { 
+              id: topRecommendation._id, 
+              lastUpdated: new Date() 
+            } 
+          } }
+        );
+        console.log('Updated favourite movie mostSimilar field in database.');
+
         res.status(200).json({ 
           favourite: { ...favouriteMovie, fullplot_embedding: undefined },
           recommendation: topRecommendation 
         });
-
       } catch (error) {
         console.error('Error fetching recommendation:', error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
