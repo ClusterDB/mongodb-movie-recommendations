@@ -171,7 +171,7 @@ async function getRecommendation(req, res) {
             } 
           } }
         );
-        console.log('Updated favourite movie mostSimilar field in database.');
+        console.log(`Updated favourite movie mostSimilar field in database for "${favouriteMovie.title}".`);
 
         res.status(200).json({ 
           favourite: { ...favouriteMovie, fullplot_embedding: undefined },
