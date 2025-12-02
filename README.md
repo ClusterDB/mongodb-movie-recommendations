@@ -25,6 +25,66 @@ The application provides these 3 endpoints (no front-end code is included, but t
 ## Preparing your database
 The application works from the data in the [`movies` collection of the `sample_mflix` database that you automatically create in MongoDB Atlas](https://www.mongodb.com/docs/atlas/sample-data/sample-mflix/).
 
-The `movies` collection contains the embedding data for the `plot` field for each collection, this application works instead with the `fullplot` data.
+The `movies` collection contains the embedding data for the `plot` field for each collection, this application works instead with the `fullplot` data, and so we need to generate those embeddings and store them in the movie documents.
 
 The application automates the maintenance and creation on a new field in the `movies` collection named `fullplot_embedding` using an [Atlas Trigger](https://www.mongodb.com/docs/atlas/atlas-ui/triggers/). Whenever a document is inserted/replaced, or the `fullplot` fields is updated, the trigger calls the Voyage AI API to generate a new vector/embedding from the new string, and stores in in the `fullplot_embedding` field.
+
+### Setting up the MongoDB Atlas trigger
+Start configuring the [MongoDB Atlas trigger](https://www.mongodb.com/docs/atlas/atlas-ui/triggers/) as shown here:
+
+![Atlas UI, where the "Enable" toggle is off. Trigger type is Database. Watch against is Collection, Cluster Name is Cluster0, Database name is sample_mflix, Collection Name is movies, Operation type == Insert Document + Update Document + Replace Document](public/images/configure_trigger_1.png)
+
+Note that the `Enable` toggle should be turned off at this point, as the trigger will fail until the Atlas Secret has been configured.
+
+Continue configuring the trigger:
+
+![Atlas UI showing Auto-Resume toggle turned on, Event Ordering to on, and Skip Events On Re-Enable to off](public/images/configure_trigger_2.png)
+
+Note that `Event Ordering` is enabled, this ensures that we don't exceed the Voyage AI free-tier rate limit when making a bulk change to `movies` collection.
+
+Set the `Event Type` to `Function` and paste in the code from [Atlas/plotChangeTrigger.js](Atlas/plotChangeTrigger.js):
+
+![Atlas UI showing Event Type set to function and javascript code in the Function code box](public/images/configure_trigger_3.png)
+
+Set a Match Expression ([Atlas/triggerMatchExpression.json](Atlas/triggerMatchExpression.json)) so that the resources aren't wasted running if the movie document is updated, but the `fullplot` field hasn't been changed:
+
+![Atlas UI showing a Match Expression being added](public/images/configure_trigger_4.png)
+
+Optionally, name the trigger, and then `Save` it.
+
+#### Define the `VOYAGE-API-KEY` Atlas secret
+
+Return to the Triggers overiew and select the "Linked App Service" link:
+
+![Atlas UI with a link to the "triggers" app](public/images/configure_trigger_5.png)
+
+Select `Values` from the App Services menu and then click on "Create New Value". 
+
+Select `SECRET`, set the name to `VOYAGE-API-KEY`, and the value to the key that you got from the [(Voyage AI site](https://www.voyageai.com/) as part of the prerequistes:
+
+![Atlas UI configuring a secret named VOYAGE-API-KEY](public/images/configure_trigger_6.png)
+
+To access the secret from the trigger code, it needs to be wrapped in a value (again named `VOYAGE-API-KEY`):
+
+![Atlas UI configuring a value linked to the VOYAGE-API-KEY secret](public/images/configure_trigger_7.png)
+
+Return to the trigger definition and enable the trigger:
+
+![Atlas UI setting the Enable toggle to on for the trigger](public/images/configure_trigger_8.png)
+
+### Adding the embeddings
+
+The trigger is now active, and so we can update `fullplot` in all of the `movies` documents, and then the trigger will aysnchronously request the embedding from Voyage AI, and store it in the movie document as a new field named `fullplot_embedding`:
+
+```js
+use sample_mflix
+db.movies.updateMany(
+  { fullplot: { $type: "string" } },
+  [
+    { $set: { fullplot: { $concat: ["$fullplot", " "] } } } // Add a space to 
+                                            // the end of the fullplot string
+  ]
+);
+```
+
+This update will complete quickly, but the triggers run sequentially and so it will take some time for `fullplot_embedding` to be set in all of the movie documents.
