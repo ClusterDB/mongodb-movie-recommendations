@@ -1,0 +1,14 @@
+{
+    "$or": [
+        {
+            "updateDescription.updatedFields.fullplot": {
+                "$exists": true
+            }
+        },
+        {
+            "fullDocument.fullplot": {
+                "$exists": true
+            }
+        }
+    ]
+}

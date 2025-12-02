@@ -1,6 +1,5 @@
 # MongoDB Movie Recommendation Engine
-The purpose of the code in this repo is to demonstrate how to build a recommendation
-using Voyage AI and MongoDB Atlas.
+The purpose of the code in this repo is to demonstrate how to build a recommendation engine using Voyage AI and MongoDB Atlas.
 
 ## Endpoints
 The application provides these 3 endpoints (no front-end code is included, but there's a Postman collection that can be used for testing):
